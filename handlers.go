@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"time"
 
@@ -38,5 +39,21 @@ func (cfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Request) 
 		respondWithError(w, http.StatusInternalServerError, "Couldn't create user")
 		return
 	}
+	respondWithJSON(w, http.StatusOK, databaseUserToUser(user))
+}
+
+func (cfg *apiConfig) handleGetUserByAPIKey(w http.ResponseWriter, r *http.Request) {
+	apiKey, err := getAPIKey(r.Header)
+	log.Printf("APIKEY FOUND, %s\n", apiKey)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "No API Key Found")
+		return
+	}
+
+	user, err := cfg.DB.GetUserByAPIKey(r.Context(), apiKey)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+	}
+
 	respondWithJSON(w, http.StatusOK, databaseUserToUser(user))
 }
