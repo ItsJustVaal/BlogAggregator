@@ -10,16 +10,6 @@ import (
 	"github.com/itsjustvaal/blogaggregator/internal/database"
 )
 
-func handleGetReadiness(w http.ResponseWriter, r *http.Request) {
-	respondWithJSON(w, http.StatusOK, basicResponse{
-		Status: "ok",
-	})
-}
-
-func handleGetErr(w http.ResponseWriter, r *http.Request) {
-	respondWithError(w, http.StatusInternalServerError, "Internal Server Error")
-}
-
 func (cfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	checker := jsonDecode{}
