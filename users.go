@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"time"
 
@@ -10,6 +9,7 @@ import (
 	"github.com/itsjustvaal/blogaggregator/internal/database"
 )
 
+// Creates new user
 func (cfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	checker := jsonDecode{}
@@ -23,7 +23,7 @@ func (cfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Request) 
 		ID:        uuid.New(),
 		CreatedAt: time.Now().UTC(),
 		UpdatedAt: time.Now().UTC(),
-		Name:      checker.Body,
+		Name:      checker.Name,
 	})
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Couldn't create user")
@@ -32,18 +32,7 @@ func (cfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Request) 
 	respondWithJSON(w, http.StatusOK, databaseUserToUser(user))
 }
 
-func (cfg *apiConfig) handleGetUserByAPIKey(w http.ResponseWriter, r *http.Request) {
-	apiKey, err := getAPIKey(r.Header)
-	log.Printf("APIKEY FOUND, %s\n", apiKey)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "No API Key Found")
-		return
-	}
-
-	user, err := cfg.DB.GetUserByAPIKey(r.Context(), apiKey)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, err.Error())
-	}
-
+// Gets user info by API key
+func (cfg *apiConfig) handleGetUserByAPIKey(w http.ResponseWriter, r *http.Request, user database.User) {
 	respondWithJSON(w, http.StatusOK, databaseUserToUser(user))
 }
