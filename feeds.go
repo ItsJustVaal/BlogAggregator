@@ -26,11 +26,23 @@ func (cfg *apiConfig) handlerFeedCreate(w http.ResponseWriter, r *http.Request, 
 		Name:      checker.Name,
 		Url:       checker.URL,
 	})
+
+	feedFollow, err := cfg.DB.CreateFeedFollow(r.Context(), database.CreateFeedFollowParams{
+		ID:        uuid.New(),
+		CreatedAt: time.Now().UTC(),
+		UpdatedAt: time.Now().UTC(),
+		FeedID:    feed.ID,
+		UserID:    user.ID,
+	})
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Couldn't create feed")
 		return
 	}
-	respondWithJSON(w, http.StatusOK, databaseFeedToFeed(feed))
+	finalFeed, FinalFFollow := databaseFeedToFeed(feed, feedFollow)
+	respondWithJSON(w, http.StatusOK, CreateFeedResponse{
+		Feed:       finalFeed,
+		FeedFollow: FinalFFollow,
+	})
 }
 
 func (cfg *apiConfig) handlerGetAllFeeds(w http.ResponseWriter, r *http.Request) {
@@ -75,7 +87,6 @@ func (cfg *apiConfig) handlerCreateFeedFollow(w http.ResponseWriter, r *http.Req
 	respondWithJSON(w, http.StatusOK, databaseFFollowToFFollow(feedFollow))
 }
 
-// This deletes any feed follow even if the user id is wrong still
 func (cfg *apiConfig) handlerDeleteFeedFollow(w http.ResponseWriter, r *http.Request, user database.User) {
 	decoder := json.NewDecoder(r.Body)
 	checker := jsonDecode{}
@@ -102,4 +113,26 @@ func (cfg *apiConfig) handlerDeleteFeedFollow(w http.ResponseWriter, r *http.Req
 	}
 
 	respondWithJSON(w, http.StatusOK, "Deleted Feed Follow")
+}
+
+func (cfg *apiConfig) handlerGetAllFeedFollows(w http.ResponseWriter, r *http.Request, user database.User) {
+	feeds, err := cfg.DB.GetAllFeeds(r.Context())
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Couldn't get feeds")
+		return
+	}
+	var i []Feed
+	for _, y := range feeds {
+		if y.UserID == user.ID {
+			i = append(i, Feed{
+				ID:        y.ID,
+				CreatedAt: y.CreatedAt,
+				UpdatedAt: y.UpdatedAt,
+				UserID:    y.UserID,
+				Name:      y.Name,
+				Url:       y.Url,
+			})
+		}
+	}
+	respondWithJSON(w, http.StatusOK, i)
 }
