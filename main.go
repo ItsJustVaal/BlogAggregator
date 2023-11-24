@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
@@ -46,6 +47,7 @@ func main() {
 	v1Router.Get("/users", apiCfg.middlewareAuth(apiCfg.handleGetUserByAPIKey))
 	v1Router.Get("/feeds", apiCfg.handlerGetAllFeeds)
 	v1Router.Get("/feed_follows", apiCfg.middlewareAuth(apiCfg.handlerGetAllFeedFollows))
+	v1Router.Get("/posts", apiCfg.middlewareAuth(apiCfg.handlerPostsGet))
 
 	v1Router.Post("/feeds", apiCfg.middlewareAuth(apiCfg.handlerFeedCreate))
 	v1Router.Post("/users", apiCfg.handlerCreateUser)
@@ -60,6 +62,10 @@ func main() {
 		Addr:    ":" + port,
 		Handler: mainRouter,
 	}
+
+	const collectionConcurrency = 10
+	const collectionInterval = time.Minute
+	go startScraping(queries, collectionConcurrency, collectionInterval)
 
 	log.Printf("Serving on port: %s\n", port)
 	log.Fatal(srv.ListenAndServe())

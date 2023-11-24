@@ -34,12 +34,13 @@ type User struct {
 }
 
 type Feed struct {
-	ID        uuid.UUID `json:"id"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	Name      string    `json:"name"`
-	Url       string    `json:"url"`
-	UserID    uuid.UUID `json:"user_id"`
+	ID            uuid.UUID  `json:"id"`
+	CreatedAt     time.Time  `json:"created_at"`
+	UpdatedAt     time.Time  `json:"updated_at"`
+	LastFetchedAt *time.Time `json:"last_fetched_at"`
+	Name          string     `json:"name"`
+	Url           string     `json:"url"`
+	UserID        uuid.UUID  `json:"user_id"`
 }
 
 type FeedFollow struct {
@@ -55,6 +56,34 @@ type CreateFeedResponse struct {
 	FeedFollow FeedFollow `json:"feed_follow"`
 }
 
+type RSSFeed struct {
+	Channel struct {
+		Title       string    `xml:"title"`
+		Link        string    `xml:"link"`
+		Description string    `xml:"description"`
+		Language    string    `xml:"language"`
+		Item        []RSSItem `xml:"item"`
+	} `xml:"channel"`
+}
+
+type RSSItem struct {
+	Title       string `xml:"title"`
+	Link        string `xml:"link"`
+	Description string `xml:"description"`
+	PubDate     string `xml:"pubDate"`
+}
+
+type Post struct {
+	ID           uuid.UUID `json:"id"`
+	Created_at   time.Time `json:"created_at"`
+	Updated_at   time.Time `json:"updated_at"`
+	Title        string    `json:"title"`
+	Url          string    `json:"url"`
+	Description  string    `json:"description"`
+	Published_at time.Time `json:"published_at"`
+	Feed_id      uuid.UUID `json:"feed_id"`
+}
+
 func databaseUserToUser(user database.User) User {
 	return User{
 		ID:        user.ID,
@@ -65,7 +94,7 @@ func databaseUserToUser(user database.User) User {
 	}
 }
 
-func databaseFeedToFeed(feed database.Feed, feedFollow database.FeedFollow) (Feed, FeedFollow) {
+func databaseFeedToFeedResp(feed database.Feed, feedFollow database.FeedFollow) (Feed, FeedFollow) {
 	return Feed{
 			ID:        feed.ID,
 			CreatedAt: feed.CreatedAt,
@@ -90,4 +119,32 @@ func databaseFFollowToFFollow(feed database.FeedFollow) FeedFollow {
 		FeedID:    feed.FeedID,
 		UserID:    feed.UserID,
 	}
+}
+
+func databaseFeedToFeed(feed database.Feed) Feed {
+	return Feed{
+		ID:        feed.ID,
+		CreatedAt: feed.CreatedAt,
+		UpdatedAt: feed.UpdatedAt,
+		Name:      feed.Name,
+		Url:       feed.Url,
+		UserID:    feed.UserID,
+	}
+}
+
+func databasePostsToPosts(posts []database.Post) []Post {
+	var finalPosts []Post
+	for _, x := range posts {
+		finalPosts = append(finalPosts, Post{
+			ID:           x.ID,
+			Created_at:   x.CreatedAt,
+			Updated_at:   x.UpdatedAt,
+			Title:        x.Title,
+			Url:          x.Url,
+			Description:  x.Description.String,
+			Published_at: x.PublishedAt.Time,
+			Feed_id:      x.FeedID,
+		})
+	}
+	return finalPosts
 }

@@ -38,7 +38,7 @@ func (cfg *apiConfig) handlerFeedCreate(w http.ResponseWriter, r *http.Request, 
 		respondWithError(w, http.StatusInternalServerError, "Couldn't create feed")
 		return
 	}
-	finalFeed, FinalFFollow := databaseFeedToFeed(feed, feedFollow)
+	finalFeed, FinalFFollow := databaseFeedToFeedResp(feed, feedFollow)
 	respondWithJSON(w, http.StatusOK, CreateFeedResponse{
 		Feed:       finalFeed,
 		FeedFollow: FinalFFollow,
